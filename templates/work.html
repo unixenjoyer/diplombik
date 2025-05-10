@@ -1,33 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Рабочий экран</title>
-</head>
-<body>
-    <h1>Рабочий экран</h1>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
+{% extends "base.html" %}
+
+{% block content %}
+<section class="work-section">
+  <h2><i class="icon-work"></i> Рабочий экран</h2>
+
+  <div class="card work-card">
+    <div class="work-status">
+      {% if active_session %}
+        <p class="active-session">Активная сессия начата: {{ active_session.start_time.strftime('%H:%M') }}</p>
+      {% else %}
+        <p class="no-session">Нет активной сессии</p>
+      {% endif %}
+
+      <p class="rate-info">Ваша ставка: {{ user.hourly_rate }} ₽/час</p>
+      <p class="total-info">Всего заработано: {{ "%.2f"|format(user.total_earned) }} ₽</p>
+    </div>
+
+    <div class="work-controls">
+      <form method="POST">
+        {% if active_session %}
+          <button type="submit" name="end" class="btn btn-danger">
+            <i class="icon-stop"></i> Завершить работу
+          </button>
+        {% else %}
+          <button type="submit" name="start" class="btn btn-primary">
+            <i class="icon-start"></i> Начать работу
+          </button>
         {% endif %}
-    {% endwith %}
+      </form>
+    </div>
+  </div>
+</section>
 
-    <p>Ставка: {{ user.hourly_rate }} руб/час</p>
-    <p>Всего заработано: {{ user.total_earned }} руб.</p>
+<style>
+.work-section {
+  padding: 1.5rem 0;
+}
 
-    {% if active_session %}
-        <form method="POST">
-            <button type="submit" name="end">Завершить работу</button>
-        </form>
-    {% else %}
-        <form method="POST">
-            <button type="submit" name="start">Начать работу</button>
-        </form>
-    {% endif %}
+.work-card {
+  text-align: center;
+  padding: 2rem;
+}
 
-    <a href="{{ url_for('logout') }}">Выйти</a>
-</body>
-</html>
+.work-status p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.active-session {
+  color: var(--success);
+}
+
+.no-session {
+  color: var(--accent);
+}
+
+.work-controls {
+  margin-top: 2rem;
+}
+
+.icon-work:before { content: "🛠️"; }
+.icon-start:before { content: "▶️"; }
+.icon-stop:before { content: "⏹️"; }
+</style>
+{% endblock %}

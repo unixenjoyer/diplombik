@@ -1,20 +1,47 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="{{ current_theme }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}WorkLogger{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || '{{ current_theme }}';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    });
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+      fetch('/toggle_theme', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }).then(() => {
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+      });
+    }
+  </script>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>WorkLogger</h1>
+      <h1>Система подсчёта зарплаты</h1>
       {% if 'user_id' in session %}
-        <nav>
+        <div class="header-controls">
+          <button onclick="toggleTheme()" class="btn theme-toggle">
+            <span class="theme-icon">
+              {% if current_theme == 'light' %}🌙{% else %}☀️{% endif %}
+            </span>
+            {% if current_theme == 'light' %}Тёмная{% else %}Светлая{% endif %} тема
+          </button>
           <a href="{{ url_for('logout') }}" class="btn">Выйти</a>
-        </nav>
+        </div>
       {% endif %}
     </header>
 
@@ -31,10 +58,9 @@
     <main>
       {% block content %}{% endblock %}
     </main>
-
-    <footer>
-      <p>© 2025 WorkLogger | Пастельный дизайн от студии Медоеда ака Васьки Олейника </p>
-    </footer>
   </div>
+  <footer>
+	<p>сайт был создан медоедом ака васька олейник в 2025 году</p>
+  </footer>
 </body>
 </html>

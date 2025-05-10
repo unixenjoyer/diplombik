@@ -39,6 +39,18 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.context_processor
+def inject_theme():
+    return dict(current_theme=session.get('theme', 'light'))
+
+@app.route('/toggle_theme', methods=['POST'])
+@login_required
+def toggle_theme():
+    current_theme = session.get('theme', 'light')
+    new_theme = 'dark' if current_theme == 'light' else 'light'
+    session['theme'] = new_theme
+    return '', 204
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -50,7 +62,7 @@ def login():
             session['user_id'] = user.id
             session['is_admin'] = user.is_admin
             return redirect(url_for('admin' if user.is_admin else 'work'))
-        flash('Неверный логин или пароль!')
+        flash('Неверный логин или пароль!', 'error')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -60,12 +72,12 @@ def register():
         password = request.form['password']
 
         if User.query.filter_by(username=username).first():
-            flash('Пользователь уже существует!')
+            flash('Пользователь уже существует!', 'error')
         else:
             new_user = User(username=username, password=password)
             db.session.add(new_user)
             db.session.commit()
-            flash('Регистрация успешна!')
+            flash('Регистрация успешна!', 'success')
             return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -80,14 +92,14 @@ def work():
             new_session = WorkSession(user_id=user.id)
             db.session.add(new_session)
             db.session.commit()
-            flash('Работа начата!')
+            flash('Работа начата!', 'success')
         elif 'end' in request.form and active_session:
             active_session.end_time = datetime.utcnow()
             hours = (active_session.end_time - active_session.start_time).total_seconds() / 3600
             salary = hours * user.hourly_rate
             user.total_earned += salary
             db.session.commit()
-            flash(f'Заработано: {salary:.2f} руб.')
+            flash(f'Заработано: {salary:.2f} руб.', 'success')
         return redirect(url_for('work'))
 
     return render_template('work.html', user=user, active_session=active_session)
@@ -115,11 +127,7 @@ def add_employee():
     if User.query.filter_by(username=username).first():
         flash('Пользователь уже существует!', 'error')
     else:
-        new_employee = User(
-            username=username,
-            password=password,
-            hourly_rate=hourly_rate
-        )
+        new_employee = User(username=username, password=password, hourly_rate=hourly_rate)
         db.session.add(new_employee)
         db.session.commit()
         flash('Сотрудник добавлен!', 'success')

@@ -1,19 +1,72 @@
 {% extends "base.html" %}
 
+{% block title %}Вход в систему{% endblock %}
+
 {% block content %}
 <div class="auth-container">
-  <h2>Вход в систему</h2>
-  <form method="POST" action="{{ url_for('login') }}">
-    <div class="form-group">
-      <input type="text" name="username" placeholder="Ваш логин" required class="form-control">
-    </div>
-    <div class="form-group">
-      <input type="password" name="password" placeholder="Пароль" required class="form-control">
-    </div>
-    <button type="submit" class="btn btn-primary">Войти</button>
-  </form>
-  <p class="auth-link">
-    Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a>
-  </p>
+  <div class="card auth-card">
+    <h2><i class="icon-login"></i> Вход в систему</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <input type="text" name="username" placeholder="Логин" required class="form-control">
+      </div>
+      <div class="form-group">
+        <input type="password" name="password" placeholder="Пароль" required class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">Войти</button>
+    </form>
+
+    <p class="auth-link">
+      Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a>
+    </p>
+  </div>
 </div>
+
+<style>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  padding: 2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.auth-link {
+  margin-top: 1.5rem;
+  color: var(--text);
+}
+
+.auth-link a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.icon-login:before {
+  content: "🔑";
+  margin-right: 0.5rem;
+}
+</style>
 {% endblock %}
