@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Рабочий экран</title>
+</head>
+<body>
+    <h1>Рабочий экран</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <p>Ставка: {{ user.hourly_rate }} руб/час</p>
+    <p>Всего заработано: {{ user.total_earned }} руб.</p>
+
+    {% if active_session %}
+        <form method="POST">
+            <button type="submit" name="end">Завершить работу</button>
+        </form>
+    {% else %}
+        <form method="POST">
+            <button type="submit" name="start">Начать работу</button>
+        </form>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}">Выйти</a>
+</body>
+</html>

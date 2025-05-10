@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Админ-панель</h1>
+        <h2>Сотрудники</h2>
+        <ul>
+            {% for emp in employees %}
+                <li>{{ emp.username }} ({{ emp.hourly_rate }} руб/час) — Всего заработано: {{ emp.total_earned }} руб.</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Добавить сотрудника</h2>
+        <form method="POST" action="/add_employee">
+            <input type="text" name="username" placeholder="Логин" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <input type="number" name="hourly_rate" placeholder="Ставка (руб/час)" step="0.01" required>
+            <button type="submit">Добавить</button>
+        </form>
+    </div>
+</body>
+</html>
