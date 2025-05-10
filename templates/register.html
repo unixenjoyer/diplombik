@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Регистрация</title>
+    <style>
+        body { font-family: Arial; max-width: 500px; margin: 0 auto; padding: 20px; }
+        input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Регистрация</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="error">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('register') }}">
+        <input type="text" name="username" placeholder="Логин" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+</body>
+</html>

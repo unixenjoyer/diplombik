@@ -10,7 +10,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Модели перенесены прямо сюда для надежности
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -25,7 +24,6 @@ class WorkSession(db.Model):
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
 
-# Создаем таблицы и админа
 with app.app_context():
     db.create_all()
     if not User.query.filter_by(username='admin').first():
@@ -75,25 +73,23 @@ def register():
 @login_required
 def work():
     user = User.query.get(session['user_id'])
+    active_session = WorkSession.query.filter_by(user_id=user.id, end_time=None).first()
 
     if request.method == 'POST':
-        if 'start' in request.form:
+        if 'start' in request.form and not active_session:
             new_session = WorkSession(user_id=user.id)
             db.session.add(new_session)
             db.session.commit()
             flash('Работа начата!')
-        elif 'end' in request.form:
-            session = WorkSession.query.filter_by(user_id=user.id, end_time=None).first()
-            if session:
-                session.end_time = datetime.utcnow()
-                hours = (session.end_time - session.start_time).total_seconds() / 3600
-                salary = hours * user.hourly_rate
-                user.total_earned += salary
-                db.session.commit()
-                flash(f'Заработано: {salary:.2f} руб.')
+        elif 'end' in request.form and active_session:
+            active_session.end_time = datetime.utcnow()
+            hours = (active_session.end_time - active_session.start_time).total_seconds() / 3600
+            salary = hours * user.hourly_rate
+            user.total_earned += salary
+            db.session.commit()
+            flash(f'Заработано: {salary:.2f} руб.')
         return redirect(url_for('work'))
 
-    active_session = WorkSession.query.filter_by(user_id=user.id, end_time=None).first()
     return render_template('work.html', user=user, active_session=active_session)
 
 @app.route('/admin')
@@ -104,6 +100,51 @@ def admin():
 
     employees = User.query.filter_by(is_admin=False).all()
     return render_template('admin.html', employees=employees)
+
+@app.route('/admin/add_employee', methods=['POST'])
+@login_required
+def add_employee():
+    if not session.get('is_admin'):
+        flash('Доступ запрещен!', 'error')
+        return redirect(url_for('work'))
+
+    username = request.form['username']
+    password = request.form['password']
+    hourly_rate = float(request.form['hourly_rate'])
+
+    if User.query.filter_by(username=username).first():
+        flash('Пользователь уже существует!', 'error')
+    else:
+        new_employee = User(
+            username=username,
+            password=password,
+            hourly_rate=hourly_rate
+        )
+        db.session.add(new_employee)
+        db.session.commit()
+        flash('Сотрудник добавлен!', 'success')
+
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete/<int:employee_id>', methods=['POST'])
+@login_required
+def delete_employee(employee_id):
+    if not session.get('is_admin'):
+        flash('Доступ запрещен!', 'error')
+        return redirect(url_for('work'))
+
+    employee = User.query.get(employee_id)
+    if not employee:
+        flash('Сотрудник не найден!', 'error')
+    elif employee.is_admin:
+        flash('Нельзя удалить администратора!', 'error')
+    else:
+        WorkSession.query.filter_by(user_id=employee_id).delete()
+        db.session.delete(employee)
+        db.session.commit()
+        flash('Сотрудник удален!', 'success')
+
+    return redirect(url_for('admin'))
 
 @app.route('/logout')
 def logout():
