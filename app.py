@@ -154,6 +154,32 @@ def delete_employee(employee_id):
 
     return redirect(url_for('admin'))
 
+@app.route('/admin/update_rate/<int:employee_id>', methods=['POST'])
+@login_required
+def update_rate(employee_id):
+    if not session.get('is_admin'):
+        flash('Доступ запрещён!', 'error')
+        return redirect(url_for('work'))
+
+    employee = User.query.get(employee_id)
+    if not employee:
+        flash('Сотрудник не найден!', 'error')
+    elif employee.is_admin:
+        flash('Нельзя изменить ставку администратора!', 'error')
+    else:
+        try:
+            new_rate = float(request.form['hourly_rate'])
+            if new_rate <= 0:
+                flash('Ставка должна быть больше 0!', 'error')
+            else:
+                employee.hourly_rate = new_rate
+                db.session.commit()
+                flash(f'Ставка для {employee.username} обновлена!', 'success')
+        except ValueError:
+            flash('Некорректное значение ставки!', 'error')
+
+    return redirect(url_for('admin'))
+
 @app.route('/logout')
 def logout():
     session.clear()
